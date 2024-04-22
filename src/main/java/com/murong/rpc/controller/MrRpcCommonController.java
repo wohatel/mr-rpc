@@ -121,7 +121,7 @@ public class MrRpcCommonController {
             }
 
             @Override
-            public Cookie[] getCookies(String header) {
+            public Cookie[] getCookies() {
                 return httpServletRequest.getCookies();
             }
 

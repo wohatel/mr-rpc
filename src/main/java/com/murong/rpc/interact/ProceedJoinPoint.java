@@ -19,7 +19,7 @@ public interface ProceedJoinPoint {
     /**
      * 获取header
      */
-    Cookie[] getCookies(String header);
+    Cookie[] getCookies();
 
     /**
      * 获取实例
