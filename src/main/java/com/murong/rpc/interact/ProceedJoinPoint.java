@@ -1,5 +1,7 @@
 package com.murong.rpc.interact;
 
+import jakarta.servlet.http.Cookie;
+
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -8,6 +10,16 @@ import java.lang.reflect.InvocationTargetException;
  * @author yaochuang 2024/04/22 16:07
  */
 public interface ProceedJoinPoint {
+
+    /**
+     * 获取header
+     */
+    String getHeader(String header);
+
+    /**
+     * 获取header
+     */
+    Cookie[] getCookies(String header);
 
     /**
      * 获取实例

@@ -8,6 +8,7 @@ import com.murong.rpc.interact.MrServerAroundAdvice;
 import com.murong.rpc.interact.ProceedJoinPoint;
 import com.murong.rpc.util.DefaultKeyValue;
 import com.murong.rpc.util.StreamUtil;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
@@ -40,7 +41,7 @@ public class MrRpcCommonController {
 
     @SneakyThrows
     @PostMapping(value = RpcUrl.RPC)
-    public String common(@RequestBody String param, HttpServletResponse response) {
+    public String common(@RequestBody String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         try {
             RpcRequest rpcRequest = JSON.parseObject(param, RpcRequest.class);
             DefaultKeyValue<Object, Method> objectMethodDefaultKeyValue = RpcCache.getVersionMethod(rpcRequest);
@@ -48,7 +49,7 @@ public class MrRpcCommonController {
             Method method = objectMethodDefaultKeyValue.getValue();
             Object[] objects = transMethodWithParams(method, rpcRequest.getParams());
             // 服务端拦截执行逻辑
-            Object proceed = proceedResponse(instance, method, objects);
+            Object proceed = proceedResponse(httpServletRequest, instance, method, objects);
             return JSON.toJSONString(proceed);
         } catch (Exception e) {
             log.warning(e.getMessage());
@@ -66,7 +67,7 @@ public class MrRpcCommonController {
 
     @SneakyThrows
     @PostMapping(value = RpcUrl.UPLOAD)
-    public String upload(HttpServletRequest httpServletRequest, HttpServletResponse response, @RequestParam String param) {
+    public String upload(@RequestParam String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         try {
             RpcRequest rpcRequest = JSON.parseObject(URLDecoder.decode(param, Charset.defaultCharset()), RpcRequest.class);
             DefaultKeyValue<Object, Method> objectMethodDefaultKeyValue = RpcCache.getVersionMethod(rpcRequest);
@@ -75,7 +76,7 @@ public class MrRpcCommonController {
             Object[] realParams = transMethodWithParams(method, rpcRequest.getParams());
             // 设置流
             realParams[rpcRequest.getIndex()] = httpServletRequest.getInputStream();
-            Object proceed = proceedResponse(instance, method, realParams);
+            Object proceed = proceedResponse(httpServletRequest, instance, method, realParams);
             return JSON.toJSONString(proceed);
         } catch (Exception e) {
             log.warning(e.getMessage());
@@ -87,7 +88,7 @@ public class MrRpcCommonController {
 
     @SneakyThrows
     @PostMapping(value = RpcUrl.DOWNLOAD)
-    public void download(HttpServletResponse response, @RequestParam String param) {
+    public void download(@RequestParam String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         try {
             RpcRequest rpcRequest = JSON.parseObject(URLDecoder.decode(param, Charset.defaultCharset()), RpcRequest.class);
             DefaultKeyValue<Object, Method> objectMethodDefaultKeyValue = RpcCache.getVersionMethod(rpcRequest);
@@ -95,7 +96,7 @@ public class MrRpcCommonController {
             Method method = objectMethodDefaultKeyValue.getValue();
             Object[] realParams = transMethodWithParams(method, rpcRequest.getParams());
 
-            InputStream inputStream = (InputStream) proceedResponse(instance, method, realParams);
+            InputStream inputStream = (InputStream) proceedResponse(httpServletRequest, instance, method, realParams);
             StreamUtil.inputStreamToOutputStream(inputStream, response.getOutputStream());
         } catch (Exception e) {
             log.warning(e.getMessage());
@@ -111,8 +112,19 @@ public class MrRpcCommonController {
      * @param method   方法
      * @param objects  实际参数
      */
-    private Object proceedResponse(Object instance, Method method, Object[] objects) throws InvocationTargetException, IllegalAccessException {
+    private Object proceedResponse(HttpServletRequest httpServletRequest, Object instance, Method method, Object[] objects) throws InvocationTargetException, IllegalAccessException {
         ProceedJoinPoint proceedJoinPoint = new ProceedJoinPoint() {
+
+            @Override
+            public String getHeader(String header) {
+                return httpServletRequest.getHeader(header);
+            }
+
+            @Override
+            public Cookie[] getCookies(String header) {
+                return httpServletRequest.getCookies();
+            }
+
             @Override
             public Object getInstance() {
                 return instance;
