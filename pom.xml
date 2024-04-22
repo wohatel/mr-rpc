@@ -11,8 +11,8 @@
     <groupId>com.murong.rpc</groupId>
     <artifactId>mr-rpc</artifactId>
     <version>1.0.0</version>
-    <name>efficient-rpc</name>
-    <description>mr-rpc</description>
+    <name>mr-rpc</name>
+    <description>简单易用的web-rpc工具</description>
     <properties>
         <java.version>21</java.version>
     </properties>
