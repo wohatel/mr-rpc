@@ -33,7 +33,7 @@ java版本:21
 
 ## 5.服务端api模块需要提供的服务接口打注解
 ```
-1. 那么api模块引入上述依赖,api的接口上打上如下注解@RpcClient(url = "***"),其中url为服务的ip:port,比如127.0.0.1:9090:
+1. 那么api模块引入上述依赖,api的接口上打上如下注解@RpcClient(url = "***"),其中url为服务的http://ip:port,比如http://127.0.0.1:9090:
    
   @RpcClient(url = "${seabox.data.user}")
   public interface FileApi {
