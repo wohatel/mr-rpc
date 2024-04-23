@@ -8,7 +8,7 @@
         <version>3.2.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>io.github.wohatel</groupId>
+    <groupId>com.murong.rpc</groupId>
     <artifactId>mr-rpc</artifactId>
     <version>1.0.0</version>
     <name>mr-rpc</name>
