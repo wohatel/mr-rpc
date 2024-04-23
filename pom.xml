@@ -133,7 +133,7 @@
                 <version>1.5</version>
                 <configuration>
                     <executable>/opt/homebrew/bin/gpg</executable>
-                    <keyname>wohatel</keyname>
+                    <keyname>yaochuang</keyname>
                 </configuration>
                 <executions>
                     <execution>
