@@ -3,8 +3,10 @@ package com.murong.rpc.util;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.murong.rpc.constant.RpcCodeEnum;
+import com.murong.rpc.constant.RpcUrl;
 import com.murong.rpc.exception.RpcExecption;
 import com.murong.rpc.interact.MrRequestInterceptor;
+import com.murong.rpc.interact.MrRequestInterceptorChains;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.springframework.http.HttpEntity;
@@ -22,9 +24,16 @@ import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 
 /**
@@ -34,12 +43,15 @@ import java.util.Set;
  *
  * @author yaochuang 2024/04/01 15:54
  */
+
 @RequiredArgsConstructor
 public class RpcConnector {
 
-    private final RestTemplate restTemplate;
+    private final RestTemplate rpcRestTemplate;
 
-    private final MrRequestInterceptor mrRpcInterceptor;
+    private final RestTemplate streamRestTemplate;
+
+    private final LinkedList<MrRequestInterceptor> interceptors;
 
     /**
      * 返回单个对象
@@ -50,100 +62,131 @@ public class RpcConnector {
      * @param <T>        泛型t
      * @return 放回结果
      */
-    public <T> T exchangeRpcType(String url, HttpMethod httpMethod, Class<T> tclass, String reqbody) {
+    public <T> T exchangeRpcType(String url, HttpMethod httpMethod, Class<T> tclass, RpcRequest rpcRequest) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        mrRpcInterceptor.apply(httpHeaders);
-        HttpEntity<String> httpEntity = new HttpEntity<>(reqbody, httpHeaders);
-        ResponseEntity<String> forEntity = restTemplate.exchange(url, httpMethod, httpEntity, String.class);
-        int value = forEntity.getStatusCode().value();
-        if (value == RpcCodeEnum.SUCCESS_CODE) {
-            return JSONObject.parseObject(forEntity.getBody(), tclass);
-        } else if (value == RpcCodeEnum.FAIL_CODE) {
-            throw new RpcExecption("rpc异常:" + forEntity.getBody());
-        } else {
-            throw new RpcExecption("未知异常");
+        return execInterceptors(httpHeaders, url, rpcRequest, () -> {
+            HttpEntity<String> httpEntity = new HttpEntity<>(JSON.toJSONString(rpcRequest), httpHeaders);
+            ResponseEntity<String> forEntity = rpcRestTemplate.exchange(url + RpcUrl.RPC, httpMethod, httpEntity, String.class);
+            int value = forEntity.getStatusCode().value();
+            if (value == RpcCodeEnum.SUCCESS_CODE) {
+                return JSONObject.parseObject(forEntity.getBody(), tclass);
+            } else if (value == RpcCodeEnum.FAIL_CODE) {
+                throw new RpcExecption("rpc异常:" + forEntity.getBody());
+            } else {
+                throw new RpcExecption("未知异常");
+            }
+        });
+    }
+
+    /**
+     * 返回单个对象
+     *
+     * @param url 请求url
+     * @return 放回结果
+     */
+    public <T> T upload(String url, InputStream inputStream, Type genericReturnType, RpcRequest rpcRequest) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        return execInterceptors(httpHeaders, url, rpcRequest, () -> {
+            String param = JSON.toJSONString(rpcRequest);
+            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url + RpcUrl.UPLOAD);
+            builder.queryParam("param", param);
+            URI uri = builder.build().toUri();
+            RequestCallback requestCallback = request -> {
+                // 继续处理请求头
+                request.getHeaders().setContentType(MediaType.APPLICATION_OCTET_STREAM);
+                OutputStream outputStream = request.getBody();
+                long length = StreamUtil.inputStreamToOutputStream(inputStream, outputStream);
+                request.getHeaders().setContentLength(length);
+            };
+            ResponseExtractor<T> responseExtractor = response -> {
+                int value = response.getStatusCode().value();
+                InputStream body = response.getBody();
+                String result = IOUtils.toString(body, Charset.defaultCharset());
+                if (value == RpcCodeEnum.SUCCESS_CODE) {
+                    return JSON.parseObject(result, genericReturnType);
+                } else if (value == RpcCodeEnum.FAIL_CODE) {
+                    throw new RpcExecption("rpc上传异常:" + result);
+                } else {
+                    throw new RpcExecption(result);
+                }
+            };
+            return streamRestTemplate.execute(uri.toString(), HttpMethod.POST, requestCallback, responseExtractor);
+        });
+
+    }
+
+    /**
+     * 返回单个对象
+     *
+     * @param url 请求url
+     * @return 放回结果
+     */
+    public InputStream download(String url, RpcRequest rpcRequest) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        return execInterceptors(httpHeaders, url, rpcRequest, () -> {
+            RequestCallback requestCallback = request -> {
+                Set<Map.Entry<String, List<String>>> entries = httpHeaders.entrySet();
+                for (Map.Entry<String, List<String>> header : entries) {
+                    String key = header.getKey();
+                    List<String> value = header.getValue();
+                    for (String headerValue : value) {
+                        request.getHeaders().add(key, headerValue);
+                    }
+                }
+            };
+            ResponseExtractor<InputStream> responseExtractor = response -> {
+                int value = response.getStatusCode().value();
+                InputStream body = response.getBody();
+                if (value == RpcCodeEnum.SUCCESS_CODE) {
+                    return new RpcFileInputStream(body);
+                } else if (value == RpcCodeEnum.FAIL_CODE) {
+                    String result = IOUtils.toString(body, Charset.defaultCharset());
+                    throw new RpcExecption("rpc下载异常:" + result);
+                } else {
+                    String result = IOUtils.toString(body, Charset.defaultCharset());
+                    throw new RpcExecption(result);
+                }
+            };
+            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url + RpcUrl.DOWNLOAD);
+            builder.queryParam("param", JSON.toJSONString(rpcRequest));
+            URI uri = builder.build().toUri();
+            return streamRestTemplate.execute(uri.toString(), HttpMethod.POST, requestCallback, responseExtractor);
+        });
+    }
+
+
+    /**
+     * 执行所有的拦截器
+     *
+     * @param endpoint 端点
+     * @param request  请求
+     * @param supplier function
+     * @return
+     */
+    private <T> T execInterceptors(HttpHeaders httpHeaders, String endpoint, RpcRequest request, Supplier<T> supplier) {
+        if (!interceptors.isEmpty()) {
+            RpcAttribute rpcAttribute = new RpcAttribute();
+            rpcAttribute.setEndpoint(endpoint);
+            rpcAttribute.setHeaders(httpHeaders);
+            rpcAttribute.setMethod(request.getMethod());
+            rpcAttribute.setVersion(request.getVersion());
+            rpcAttribute.setRealParams(request.getParams());
+            return loopProceed(0, interceptors, rpcAttribute, supplier, new ArrayList<T>());
         }
+        return supplier.get();
     }
 
-    /**
-     * 返回单个对象
-     *
-     * @param url 请求url
-     * @return 放回结果
-     */
-    public <T> T upload(String url, InputStream inputStream, Type genericReturnType, String param) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        mrRpcInterceptor.apply(httpHeaders);
 
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url);
-        builder.queryParam("param", param);
-        URI uri = builder.build().toUri();
-        RequestCallback requestCallback = request -> {
-            Set<Map.Entry<String, List<String>>> entries = httpHeaders.entrySet();
-            for (Map.Entry<String, List<String>> header : entries) {
-                String key = header.getKey();
-                List<String> value = header.getValue();
-                for (String headerValue : value) {
-                    request.getHeaders().add(key, headerValue);
-                }
-            }
-            // 继续处理请求头
-            request.getHeaders().setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            OutputStream outputStream = request.getBody();
-            long length = StreamUtil.inputStreamToOutputStream(inputStream, outputStream);
-            request.getHeaders().setContentLength(length);
-        };
-        ResponseExtractor<T> responseExtractor = response -> {
-            int value = response.getStatusCode().value();
-            InputStream body = response.getBody();
-            String result = IOUtils.toString(body, Charset.defaultCharset());
-            if (value == RpcCodeEnum.SUCCESS_CODE) {
-                return JSON.parseObject(result, genericReturnType);
-            } else if (value == RpcCodeEnum.FAIL_CODE) {
-                throw new RpcExecption("rpc上传异常:" + result);
-            } else {
-                throw new RpcExecption(result);
-            }
-        };
-        return restTemplate.execute(uri.toString(), HttpMethod.POST, requestCallback, responseExtractor);
+    private <T> T loopProceed(int index, LinkedList<MrRequestInterceptor> allInceptors, RpcAttribute rpcAttribute, Supplier<T> supplier, final List<T> result) {
+        if (index >= interceptors.size()) {
+            result.add(supplier.get());
+        } else {
+            MrRequestInterceptor current = allInceptors.get(index);
+            current.execute(rpcAttribute, () -> loopProceed(index + 1, allInceptors, rpcAttribute, supplier, result));
+        }
+        if (result.isEmpty()) {
+            return null;
+        }
+        return result.getFirst();
     }
-
-    /**
-     * 返回单个对象
-     *
-     * @param url 请求url
-     * @return 放回结果
-     */
-    public InputStream download(String url, String param) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        mrRpcInterceptor.apply(httpHeaders);
-        RequestCallback requestCallback = request -> {
-            Set<Map.Entry<String, List<String>>> entries = httpHeaders.entrySet();
-            for (Map.Entry<String, List<String>> header : entries) {
-                String key = header.getKey();
-                List<String> value = header.getValue();
-                for (String headerValue : value) {
-                    request.getHeaders().add(key, headerValue);
-                }
-            }
-        };
-        ResponseExtractor<InputStream> responseExtractor = response -> {
-            int value = response.getStatusCode().value();
-            InputStream body = response.getBody();
-            if (value == RpcCodeEnum.SUCCESS_CODE) {
-                return new RpcFileInputStream(body);
-            } else if (value == RpcCodeEnum.FAIL_CODE) {
-                String result = IOUtils.toString(body, Charset.defaultCharset());
-                throw new RpcExecption("rpc下载异常:" + result);
-            } else {
-                String result = IOUtils.toString(body, Charset.defaultCharset());
-                throw new RpcExecption(result);
-            }
-        };
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url);
-        builder.queryParam("param", param);
-        URI uri = builder.build().toUri();
-        return restTemplate.execute(uri.toString(), HttpMethod.POST, requestCallback, responseExtractor);
-    }
-
 }

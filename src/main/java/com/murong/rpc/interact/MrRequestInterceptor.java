@@ -1,12 +1,18 @@
 package com.murong.rpc.interact;
 
-import org.springframework.http.HttpHeaders;
+import com.murong.rpc.util.Proceed;
+import com.murong.rpc.util.RpcAttribute;
 
 /**
- * 调用方拦截器
+ * description
  *
- * @author yaochuang 2024/04/22 12:52
+ * @author yaochuang 2024/04/24 15:56
  */
 public interface MrRequestInterceptor {
-    void apply(HttpHeaders headers);
+    /**
+     * @param rpcAttribute 请求属性
+     * @param proceed      响应结果
+     */
+    void execute(RpcAttribute rpcAttribute, Proceed proceed);
+
 }

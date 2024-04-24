@@ -1,16 +1,13 @@
 package com.murong.rpc.processor;
 
-import com.alibaba.fastjson2.JSON;
 import com.murong.rpc.annotation.MrAutowired;
 import com.murong.rpc.annotation.MrClient;
 import com.murong.rpc.annotation.MrVersion;
 import com.murong.rpc.cache.RpcCache;
-import com.murong.rpc.config.RpcRequest;
-import com.murong.rpc.constant.RpcUrl;
 import com.murong.rpc.exception.RpcExecption;
-import com.murong.rpc.util.DefaultKeyValue;
 import com.murong.rpc.util.Reflector;
 import com.murong.rpc.util.RpcConnector;
+import com.murong.rpc.util.RpcRequest;
 import com.murong.rpc.util.StreamUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -171,13 +168,13 @@ public class MrClientPostProcessor implements BeanPostProcessor {
                     request.getParams()[i] = null; // 如果是流就设置为null
                 }
             }
-            return rpcConnector.upload(url + RpcUrl.UPLOAD, inputStream, method.getGenericReturnType(), JSON.toJSONString(request));
+            return rpcConnector.upload(url, inputStream, method.getGenericReturnType(), request);
         } else if (StreamUtil.isDownload(method)) {
             request.setParams(objs);
-            return rpcConnector.download(url + RpcUrl.DOWNLOAD, JSON.toJSONString(request));
+            return rpcConnector.download(url, request);
         } else {
             request.setParams(objs);
-            String result = rpcConnector.exchangeRpcType(url + RpcUrl.RPC, HttpMethod.POST, String.class, JSON.toJSONString(request));
+            String result = rpcConnector.exchangeRpcType(url, HttpMethod.POST, String.class, request);
             return Reflector.execRealMethodWithReturnString(method, result);
         }
     }

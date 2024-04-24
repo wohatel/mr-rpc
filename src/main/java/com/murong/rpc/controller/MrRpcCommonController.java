@@ -2,7 +2,7 @@ package com.murong.rpc.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.murong.rpc.cache.RpcCache;
-import com.murong.rpc.config.RpcRequest;
+import com.murong.rpc.util.RpcRequest;
 import com.murong.rpc.constant.RpcUrl;
 import com.murong.rpc.interact.MrServerAroundAdvice;
 import com.murong.rpc.interact.ProceedJoinPoint;

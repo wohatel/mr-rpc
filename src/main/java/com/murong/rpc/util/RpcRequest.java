@@ -1,4 +1,4 @@
-package com.murong.rpc.config;
+package com.murong.rpc.util;
 
 import lombok.Data;
 
