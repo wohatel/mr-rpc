@@ -6,7 +6,6 @@ import com.murong.rpc.constant.RpcCodeEnum;
 import com.murong.rpc.constant.RpcUrl;
 import com.murong.rpc.exception.RpcExecption;
 import com.murong.rpc.interact.MrRequestInterceptor;
-import com.murong.rpc.interact.MrRequestInterceptorChains;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.springframework.http.HttpEntity;
@@ -25,14 +24,10 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 
@@ -71,9 +66,9 @@ public class RpcConnector {
             if (value == RpcCodeEnum.SUCCESS_CODE) {
                 return JSONObject.parseObject(forEntity.getBody(), tclass);
             } else if (value == RpcCodeEnum.FAIL_CODE) {
-                throw new RpcExecption("rpc异常:" + forEntity.getBody());
+                throw new RpcExecption(value, "rpc异常:" + forEntity.getBody());
             } else {
-                throw new RpcExecption("未知异常");
+                throw new RpcExecption(value, "未知异常");
             }
         });
     }
@@ -105,9 +100,9 @@ public class RpcConnector {
                 if (value == RpcCodeEnum.SUCCESS_CODE) {
                     return JSON.parseObject(result, genericReturnType);
                 } else if (value == RpcCodeEnum.FAIL_CODE) {
-                    throw new RpcExecption("rpc上传异常:" + result);
+                    throw new RpcExecption(value, "rpc上传异常:" + result);
                 } else {
-                    throw new RpcExecption(result);
+                    throw new RpcExecption(value, result);
                 }
             };
             return streamRestTemplate.execute(uri.toString(), HttpMethod.POST, requestCallback, responseExtractor);
@@ -141,10 +136,10 @@ public class RpcConnector {
                     return new RpcFileInputStream(body);
                 } else if (value == RpcCodeEnum.FAIL_CODE) {
                     String result = IOUtils.toString(body, Charset.defaultCharset());
-                    throw new RpcExecption("rpc下载异常:" + result);
+                    throw new RpcExecption(value, "rpc下载异常:" + result);
                 } else {
                     String result = IOUtils.toString(body, Charset.defaultCharset());
-                    throw new RpcExecption(result);
+                    throw new RpcExecption(value, result);
                 }
             };
             UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(url + RpcUrl.DOWNLOAD);
