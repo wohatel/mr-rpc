@@ -1,6 +1,6 @@
 ## 1.使用要求
 ```
-java版本:21
+java版本:17
 ```
 
 ## 2.rpc的坐标依赖
@@ -260,9 +260,7 @@ public class FileApiService implements FileApi {
     @Bean
     public MrRequestInterceptor mrRpcInterceptor() {
         // 定义一个MrInterceptor, 可以由客户端提供具体逻辑
-        return headers -> {
-            headers.add("token","token");
-        };
+        
     }
 
 ```
@@ -275,23 +273,8 @@ public class FileApiService implements FileApi {
     如下,是服务端接受到请求后,可以获取cookie,或者请求头,一般可以用作鉴权
 
     @Bean
-    public MrServerAroundAdvice mrServerRoundAdvice() {
-        // 定义一个MrInterceptor, 可以由客户端提供具体逻辑
-        return proceed->{
-            // 获取cookie
-            Cookie[] cookies = proceed.getCookies();
-            // 获取token
-            String token = proceed.getHeader("token");
-
-            System.out.println(System.currentTimeMillis()); // 调用开始时间
-            // 调用具体方法
-            Object result = proceed.proceed();
-            // 调用之后打印下执行时间时间
-            System.out.println(System.currentTimeMillis()); // 调用结束时间
-            
-            // 继续执行
-            return result;
-        };
+    public MrServerAroundAdvice  mrServerAroundAdvice(){
+        ......
     }
 
 ```
