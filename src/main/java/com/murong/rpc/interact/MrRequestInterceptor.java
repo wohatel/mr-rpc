@@ -11,7 +11,7 @@ import com.murong.rpc.util.RpcAttribute;
 public interface MrRequestInterceptor {
     /**
      * @param rpcAttribute 请求属性
-     * @param proceed      响应结果
+     * @param proceed      执行请求并相应结果
      */
     void execute(RpcAttribute rpcAttribute, Proceed proceed);
 
