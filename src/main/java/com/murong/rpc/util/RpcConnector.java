@@ -46,7 +46,7 @@ public class RpcConnector {
 
     private final RestTemplate streamRestTemplate;
 
-    private final LinkedList<MrRequestInterceptor> interceptors;
+    private final MrRequestInterceptor mrRequestInterceptor;
 
     /**
      * 返回单个对象
@@ -156,32 +156,18 @@ public class RpcConnector {
      * @param endpoint 端点
      * @param request  请求
      * @param supplier function
-     * @return
+     * @return T
      */
     private <T> T execInterceptors(HttpHeaders httpHeaders, String endpoint, RpcRequest request, Supplier<T> supplier) {
-        if (!interceptors.isEmpty()) {
-            RpcAttribute rpcAttribute = new RpcAttribute();
-            rpcAttribute.setEndpoint(endpoint);
-            rpcAttribute.setHeaders(httpHeaders);
-            rpcAttribute.setMethod(request.getMethod());
-            rpcAttribute.setVersion(request.getVersion());
-            rpcAttribute.setRealParams(request.getParams());
-            return loopProceed(0, interceptors, rpcAttribute, supplier, new ArrayList<T>());
-        }
-        return supplier.get();
+        RpcAttribute rpcAttribute = new RpcAttribute();
+        rpcAttribute.setEndpoint(endpoint);
+        rpcAttribute.setHeaders(httpHeaders);
+        rpcAttribute.setMethod(request.getMethod());
+        rpcAttribute.setVersion(request.getVersion());
+        rpcAttribute.setRealParams(request.getParams());
+        Proceed proceed = supplier::get;
+        Object execute = mrRequestInterceptor.execute(rpcAttribute, proceed);
+        return (T) execute;
     }
 
-
-    private <T> T loopProceed(int index, LinkedList<MrRequestInterceptor> allInceptors, RpcAttribute rpcAttribute, Supplier<T> supplier, final List<T> result) {
-        if (index >= interceptors.size()) {
-            result.add(supplier.get());
-        } else {
-            MrRequestInterceptor current = allInceptors.get(index);
-            current.execute(rpcAttribute, () -> loopProceed(index + 1, allInceptors, rpcAttribute, supplier, result));
-        }
-        if (result.isEmpty()) {
-            return null;
-        }
-        return result.getFirst();
-    }
 }
