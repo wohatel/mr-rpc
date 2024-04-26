@@ -273,6 +273,22 @@ public class FileApiService implements FileApi {
 
 ```
 
+```
+连接池配置优化
+
+
+```
+    链接超时时间-发送请求后超时
+    mr.rpc.rest.connectTimeout = 5000;
+    连接池最大数量
+    mr.rpc.rest.max-pool-size=100
+    从连接池中获取链接最大等待时间
+    mr.rpc.rest.connection-request-timeout=5000;
+    读取或写入操作时的超时时间
+    mr.rpc.rest.socket-timeout=5000;
+    每个目标主机最大连接数
+    mr.rpc.rest.max-per-route-size=20;
+
 -----------------
 结束
 
