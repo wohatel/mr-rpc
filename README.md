@@ -23,15 +23,7 @@ java版本:17
 ```
 
 ## 4.服务端api模块引入对应依赖
-```
 
-  3. server模块依赖api并实现
-    <dependency>
-        <groupId>com.murong.rpc</groupId>
-        <artifactId>mr-rpc</artifactId>
-        <version>1.0.0</version>
-    </dependency>
-```
 
 ## 5.服务端api模块需要提供的服务接口打注解
 ```
