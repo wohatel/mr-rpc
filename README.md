@@ -6,9 +6,11 @@ java版本:17
 ## 2.rpc的坐标依赖
 ```
 1.通过源码将该项目通过mvn安装到本地的依赖为:
-    <groupId>com.murong.rpc</groupId>
+<dependency>
+    <groupId>io.github.wohatel</groupId>
     <artifactId>mr-rpc</artifactId>
     <version>1.0.0</version>
+</dependency>
 后续会上传到mvn中央仓库或私服
 ```
 
