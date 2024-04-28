@@ -1,6 +1,7 @@
 package com.murong.rpc.util;
 
 import lombok.SneakyThrows;
+import org.springframework.util.FileSystemUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 
 /**
  * rpc文件流
@@ -106,7 +108,7 @@ public class RpcFileInputStream extends InputStream {
             fileInputStream.close();
         } finally {
             if (this.file != null) {
-                file.deleteOnExit();
+                Files.deleteIfExists(file.toPath());
             }
         }
     }
