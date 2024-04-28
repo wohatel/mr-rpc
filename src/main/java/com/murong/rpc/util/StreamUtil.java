@@ -2,7 +2,8 @@ package com.murong.rpc.util;
 
 import com.murong.rpc.annotation.MrAutowired;
 import com.murong.rpc.annotation.MrClient;
-import lombok.SneakyThrows;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +20,7 @@ import java.util.List;
  *
  * @author yaochuang 2024/04/16 16:44
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class StreamUtil {
 
     /**
@@ -27,10 +29,9 @@ public class StreamUtil {
      * @return void
      * @author yaochuang 2024-04-16 16:45
      */
-    @SneakyThrows
     public static long inputStreamToOutputStream(InputStream inputStream, OutputStream outputStream) {
         long length = 0;
-        try {
+        try (inputStream) {
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
@@ -39,8 +40,6 @@ public class StreamUtil {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            inputStream.close();
         }
         return length;
     }
@@ -57,7 +56,7 @@ public class StreamUtil {
     }
 
 
-    public static List<Method> getNoneStaticAndDefaultMethods(Class interfaceClass) {
+    public static List<Method> getNoneStaticAndDefaultMethods(Class<?> interfaceClass) {
         List<Method> result = new ArrayList<>();
         Method[] methods = interfaceClass.getMethods();
         for (Method method : methods) {
@@ -84,7 +83,7 @@ public class StreamUtil {
     }
 
     public static boolean isSimpleUpload(Class<?>[] parameterTypes) {
-        List<Class<?>> list = Arrays.stream(parameterTypes).filter(t -> InputStream.class.isAssignableFrom(t)).toList();
+        List<Class<?>> list = Arrays.stream(parameterTypes).filter(InputStream.class::isAssignableFrom).toList();
         if (list.size() > 1) {
             return false;
         }
