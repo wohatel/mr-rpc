@@ -288,6 +288,8 @@ public class FileApiService implements FileApi {
     mr.rpc.rest.socket-timeout=5000;
     每个目标主机最大连接数
     mr.rpc.rest.max-per-route-size=20;
+    用于配置序列化流等大文件时的目录(一般不用填写,使用默认)
+    mr.rpc.rest.cache-dir=/tmp/dir;
 
 -----------------
 结束
