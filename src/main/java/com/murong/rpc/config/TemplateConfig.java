@@ -40,4 +40,9 @@ public class TemplateConfig {
      */
     private Integer maxPerRouteSize = 20;
 
+    /**
+     * rpc的缓存缓存目录
+     */
+    private String cacheDir;
+
 }

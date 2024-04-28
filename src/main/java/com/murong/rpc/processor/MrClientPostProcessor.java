@@ -72,7 +72,7 @@ public class MrClientPostProcessor implements BeanPostProcessor {
         if (list.size() > 1) {
             throw new RpcExecption(aClass.getName() + "实现了多个 @MrClient 接口是不被允许的");
         }
-        Class<?> interfaceInstace = list.getFirst();
+        Class<?> interfaceInstace = list.get(0);
 
         List<Method> noneStaticAndDefaultMethods = StreamUtil.getNoneStaticAndDefaultMethods(interfaceInstace);
         if (CollectionUtils.isEmpty(noneStaticAndDefaultMethods)) {

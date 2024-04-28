@@ -26,7 +26,7 @@ public class BeanConfig {
         RestTemplate rpcRestTemplate = mrTemplateFactory.createRpcRestTemplate(templateConfig);
         RestTemplate streamRestTemplate = mrTemplateFactory.createStreamRestTemplate(templateConfig);
         // 放入这个容器
-        return new RpcConnector(rpcRestTemplate, streamRestTemplate, mrRequestInterceptor);
+        return new RpcConnector(rpcRestTemplate, streamRestTemplate, mrRequestInterceptor, templateConfig.getCacheDir());
     }
 
     @Bean

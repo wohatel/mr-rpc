@@ -48,6 +48,8 @@ public class RpcConnector {
 
     private final MrRequestInterceptor mrRequestInterceptor;
 
+    private final String cacheDir;
+
     /**
      * 返回单个对象
      *
@@ -133,7 +135,7 @@ public class RpcConnector {
                 int value = response.getStatusCode().value();
                 InputStream body = response.getBody();
                 if (value == RpcCodeEnum.SUCCESS_CODE) {
-                    return new RpcFileInputStream(body);
+                    return new RpcFileInputStream(body, cacheDir);
                 } else if (value == RpcCodeEnum.FAIL_CODE) {
                     String result = IOUtils.toString(body, Charset.defaultCharset());
                     throw new RpcExecption(value, "rpc下载异常:" + result);

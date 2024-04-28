@@ -4,6 +4,7 @@ package com.murong.rpc.util;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 
@@ -62,6 +63,25 @@ public class OsUtil {
      */
     public static File genTmpFile() {
         String fileDir = isWindow() ? "C:/Windows/Temp/" : "/tmp";
+        File file = new File(fileDir);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        return new File(fileDir, RandomStringUtils.randomAlphabetic(10));
+    }
+
+    /**
+     * 生成临时文件
+     */
+    public static File genTmpFile(String parentDir) {
+        String fileDir = parentDir;
+        if (StringUtils.isBlank(fileDir)) {
+            fileDir = isWindow() ? "C:/Windows/Temp/" : "/tmp";
+        }
+        File file = new File(fileDir);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
         return new File(fileDir, RandomStringUtils.randomAlphabetic(10));
     }
 
