@@ -2,6 +2,7 @@ package com.murong.rpc.util;
 
 import com.murong.rpc.annotation.MrAutowired;
 import com.murong.rpc.annotation.MrClient;
+import lombok.SneakyThrows;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,9 +27,10 @@ public class StreamUtil {
      * @return void
      * @author yaochuang 2024-04-16 16:45
      */
+    @SneakyThrows
     public static long inputStreamToOutputStream(InputStream inputStream, OutputStream outputStream) {
         long length = 0;
-        try (inputStream) {
+        try {
             byte[] buffer = new byte[1024];
             int bytesRead;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
@@ -37,6 +39,8 @@ public class StreamUtil {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            inputStream.close();
         }
         return length;
     }
