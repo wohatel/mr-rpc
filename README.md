@@ -1,9 +1,11 @@
 ## 1.使用要求
+
 ```
-java版本:17
+java版本:17+,spring-boot-starter版本,建议使用2.7+,比如2.7.11
 ```
 
 ## 2.rpc的坐标依赖
+
 ```
 1.通过源码将该项目通过mvn安装到本地的依赖为:
 <dependency>
@@ -15,6 +17,7 @@ java版本:17
 ```
 
 ## 3.服务端模块
+
 ```
 1. 一个项目如果一个项目服务想要对外提供rpc服务
   server端,项目一般会有两个模块
@@ -24,8 +27,8 @@ java版本:17
 
 ## 4.服务端api模块引入对应依赖
 
-
 ## 5.服务端api模块需要提供的服务接口打注解
+
 ```
 1. 那么api模块引入上述依赖,api的接口上打上如下注解@RpcClient(url = "***"),其中url为服务的http://ip:port,比如http://127.0.0.1:9090:
    
@@ -42,6 +45,7 @@ java版本:17
 ```
 
 ## 6.服务端server模块引入对应依赖
+
 ```
   1. server模块依赖api并实现
     <dependency>
@@ -52,6 +56,7 @@ java版本:17
 ```
 
 ## 7.服务端实现该fileApi接口
+
 ```
 4. 实现该api的接口,注意该实现类必须交由spring管理,也就是说需要打上 @component 或者@service ...等注解
 @Service
@@ -90,6 +95,7 @@ public class FileApiService implements FileApi {
 ```
 
 ## 8.在server的启动类上加上注解: @EnableMrRpc 并启动
+
 ```
 @SpringBootApplication
 @EnableMrRpc
@@ -102,7 +108,6 @@ public class AppMain {
 }
 ```
 
-
 ----------------------------------------
 
 以下是client端调用
@@ -110,6 +115,7 @@ public class AppMain {
 ----------------------------------------
 
 ## 9.另外一个服务想要远程调用FileApi 服务,需要引入依赖
+
 ```
   1. 服务引入依赖
     <dependency>
@@ -121,12 +127,15 @@ public class AppMain {
 ```
 
 ## 10.配置文件中需要配置url
+
     例如 @RpcClient(url = "${seabox.data.user}"),则需要在项目properties文件中配置如下(或yml文件)
+
 ```
 seabox.data.user=http://127.0.0.1:9090
 ```
 
 ## 11.client端项目启动类上同样需要打打上注解 @EnableMrRpc
+
 ```
 @SpringBootApplication
 @EnableMrRpc
@@ -138,10 +147,11 @@ public class ClientApplication {
 }
 ```
 
-
 ## 12. client端远程调用的注入和调用示例
+
        NAppRunner : 示例类,类需要交由spring管理,需要打上注解 @Component 或@Service ....
        FileApi: 远端服务提供的api, 需要打上注解 @MrAutowired 才能调用远程接口
+
 ```
 @Component
 public class NAppRunner{
@@ -164,7 +174,6 @@ public class NAppRunner{
 }
 ```
 
-
 ----------------------------------------
 
 以下是是简单的调用总结
@@ -180,7 +189,6 @@ public class NAppRunner{
 4: client端使用时,需要 @MrAutowired 将这个远程调用类注入
 5: 如果url类似${abc.def.dd} 客户端,还需要在项目配置文件中配置  abc.def.dd=http://*****
 ```
-
 
 ----------------------------------------
 
@@ -259,7 +267,6 @@ public class FileApiService implements FileApi {
 
 ```
 
-
 ## 15. server 想要接受到请求前和请求后处理逻辑
 
 ```
@@ -278,6 +285,7 @@ public class FileApiService implements FileApi {
 
 
 ```
+
     链接超时时间-发送请求后超时
     mr.rpc.rest.connectTimeout = 5000;
     连接池最大数量
