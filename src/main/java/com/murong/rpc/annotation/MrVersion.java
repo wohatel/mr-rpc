@@ -1,7 +1,4 @@
 package com.murong.rpc.annotation;
-
-import org.springframework.cglib.SpringCglibInfo;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

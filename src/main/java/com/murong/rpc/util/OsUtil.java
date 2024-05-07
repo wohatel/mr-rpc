@@ -47,18 +47,6 @@ public class OsUtil {
     }
 
     /**
-     * 生成临时文件夹
-     */
-    public static String genTmpDirectory(String subPath) {
-        String fileDir = isWindow() ? "C:/Windows/Temp/" : "/tmp";
-        File file = new File(fileDir, subPath);
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-        return file.getAbsolutePath();
-    }
-
-    /**
      * 生成临时文件
      */
     public static File genTmpFile() {
@@ -87,13 +75,6 @@ public class OsUtil {
 
     public static String getOs() {
         return System.getProperty("os.name");
-    }
-
-    /**
-     * 生成随机的子文件夹
-     */
-    public static String genTmpSubDirectory() {
-        return genTmpDirectory(RandomStringUtils.randomAlphabetic(12));
     }
 
 }

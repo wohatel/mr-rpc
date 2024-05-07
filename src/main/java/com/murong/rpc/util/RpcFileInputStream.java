@@ -1,7 +1,6 @@
 package com.murong.rpc.util;
 
 import lombok.SneakyThrows;
-import org.springframework.util.FileSystemUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,23 +42,14 @@ public class RpcFileInputStream extends InputStream {
     }
 
     /**
-     * String inputStream转换为本地流
+     * 准成文件流
      *
-     * @param inputStream 流
+     * @param file 文件
      */
     @SneakyThrows
-    public RpcFileInputStream(InputStream inputStream, String parentDir) {
-        if (inputStream == null) {
-            this.fileInputStream = null;
-            this.file = null;
-        } else {
-            this.file = OsUtil.genTmpFile(parentDir);
-            try (FileOutputStream outputStream = new FileOutputStream(file);) {
-                // 读到文件里面
-                StreamUtil.inputStreamToOutputStream(inputStream, outputStream);
-                this.fileInputStream = new FileInputStream(file);
-            }
-        }
+    public RpcFileInputStream(File file) {
+        this.file = file;
+        this.fileInputStream = new FileInputStream(file);
     }
 
     @Override

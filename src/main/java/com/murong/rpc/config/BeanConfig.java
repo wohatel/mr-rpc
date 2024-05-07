@@ -1,15 +1,13 @@
 package com.murong.rpc.config;
 
 import com.murong.rpc.interact.MrRequestInterceptor;
-import com.murong.rpc.interact.MrServerAroundAdvice;
-import com.murong.rpc.interact.ProceedJoinPoint;
 import com.murong.rpc.util.MrTemplateFactory;
 import com.murong.rpc.util.RpcConnector;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * description
@@ -20,27 +18,14 @@ import org.springframework.web.client.RestTemplate;
 @ComponentScan(basePackages = "com.murong.rpc.config")
 public class BeanConfig {
 
+
     @Bean
-    public RpcConnector rpcConnector(TemplateConfig templateConfig, MrRequestInterceptor mrRequestInterceptor) {
+    public RpcConnector rpcConnector(TemplateConfig templateConfig) {
+
         MrTemplateFactory mrTemplateFactory = new MrTemplateFactory();
-        RestTemplate rpcRestTemplate = mrTemplateFactory.createRpcRestTemplate(templateConfig);
-        RestTemplate streamRestTemplate = mrTemplateFactory.createStreamRestTemplate(templateConfig);
+        WebClient rpcWebClient = mrTemplateFactory.createRpcWebClient(templateConfig);
         // 放入这个容器
-        return new RpcConnector(rpcRestTemplate, streamRestTemplate, mrRequestInterceptor, templateConfig.getCacheDir());
+        return new RpcConnector(rpcWebClient,templateConfig.getCacheDir());
     }
-
-    @Bean
-    @ConditionalOnMissingBean(MrServerAroundAdvice.class)
-    public MrServerAroundAdvice simpleMrServerRoundAdvice() {
-        // 定义一个MrInterceptor, 可以由客户端提供具体逻辑
-        return ProceedJoinPoint::proceed;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(MrRequestInterceptor.class)
-    public MrRequestInterceptor simpleMrRequestInterceptor() {
-        return (r, p) -> p.proceed();
-    }
-
 
 }

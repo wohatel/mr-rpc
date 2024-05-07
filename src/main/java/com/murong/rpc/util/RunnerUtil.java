@@ -14,7 +14,6 @@ import java.util.function.Supplier;
  *
  * @author yaochuang 2024/04/01 15:55
  */
-@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class RunnerUtil {
 
@@ -25,7 +24,6 @@ public final class RunnerUtil {
         try {
             return supplier.get();
         } catch (Exception e) {
-            log.info("");
         }
         return null;
     }
@@ -37,7 +35,6 @@ public final class RunnerUtil {
         try {
             return supplier.get();
         } catch (Exception e) {
-            log.info("");
         }
         return result;
     }
@@ -51,7 +48,6 @@ public final class RunnerUtil {
         try {
             supplier.get();
         } catch (Exception e) {
-            log.info("");
         }
     }
 

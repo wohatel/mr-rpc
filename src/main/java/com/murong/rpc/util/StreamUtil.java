@@ -4,7 +4,11 @@ import com.murong.rpc.annotation.MrAutowired;
 import com.murong.rpc.annotation.MrClient;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
+import org.springframework.core.io.buffer.DataBuffer;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,6 +46,19 @@ public class StreamUtil {
             e.printStackTrace();
         }
         return length;
+    }
+
+    /**
+     * @param inputStream 输入流
+     * @param file        文件输出流
+     * @return void
+     * @author yaochuang 2024-04-16 16:45
+     */
+    @SneakyThrows
+    public static long inputStreamToFile(InputStream inputStream, File file) {
+        try (OutputStream outputStream = new FileOutputStream(file)) {
+            return inputStreamToOutputStream(inputStream, outputStream);
+        }
     }
 
 
@@ -88,9 +105,7 @@ public class StreamUtil {
             return false;
         }
         long count = list.stream().filter(t -> t == InputStream.class).count();
-        if (count == 1) {
-            return true;
-        }
-        return false;
+        return count == 1;
     }
+
 }

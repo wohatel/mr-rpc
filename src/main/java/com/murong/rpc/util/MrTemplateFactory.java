@@ -1,15 +1,14 @@
 package com.murong.rpc.util;
 
 import com.murong.rpc.config.TemplateConfig;
+import io.netty.channel.ChannelOption;
 import lombok.Getter;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
+
+import java.time.Duration;
 
 
 /**
@@ -22,40 +21,21 @@ import org.springframework.web.client.RestTemplate;
 public class MrTemplateFactory {
 
     /**
-     * 文件上传下载时使用的restTemplate,每次使用新链接
-     *
-     * @return RestTemplate
+     * 创建webClient
      */
-    public RestTemplate createStreamRestTemplate(TemplateConfig templateConfig) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        // 对于文件上传下载,读取超时不限制
-        requestFactory.setReadTimeout(0);
-        // 设置连接超时
-        requestFactory.setConnectTimeout(templateConfig.getConnectTimeout());
-        return new RestTemplate(requestFactory);
-    }
-
-    /**
-     * 普通rpc的restTemplate
-     *
-     * @return RestTemplate
-     */
-    public RestTemplate createRpcRestTemplate(TemplateConfig templateConfig) {
+    public WebClient createRpcWebClient(TemplateConfig templateConfig) {
         if (templateConfig == null) {
             templateConfig = new TemplateConfig();
         }
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(templateConfig.getMaxPoolSize());
-        connectionManager.setDefaultMaxPerRoute(templateConfig.getMaxPerRouteSize());
-        RequestConfig.Builder custom = RequestConfig.custom();
-        RequestConfig requestConfig = custom.setConnectionRequestTimeout(templateConfig.getConnectionRequestTimeout())
-                .setSocketTimeout(templateConfig.getSocketTimeout())
-                .setConnectTimeout(templateConfig.getConnectTimeout())
-                .build();
-        HttpClient httpClient = HttpClientBuilder.create()
-                .setConnectionManager(connectionManager)
-                .setDefaultRequestConfig(requestConfig).build();
-        ClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(httpClient);
-        return new RestTemplate(requestFactory);
+        final TemplateConfig current = templateConfig;
+
+        ConnectionProvider connectionProvider = ConnectionProvider.builder("mrConnectionPool").maxConnections(templateConfig.getMaxPoolSize()).pendingAcquireTimeout(Duration.ofMillis(templateConfig.getConnectionRequestTimeout())).build();
+
+        HttpClient httpClient = HttpClient.create(connectionProvider).tcpConfiguration(tcpClient -> tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, current.getConnectTimeout()).option(ChannelOption.TCP_NODELAY, true).option(ChannelOption.SO_KEEPALIVE, true));
+
+        // 使用自定义的HttpClient创建ReactorClientHttpConnector
+        ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
+        // 使用自定义的connector创建WebClient
+        return WebClient.builder().clientConnector(connector).build();
     }
 }

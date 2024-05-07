@@ -4,6 +4,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+
 /**
  * 配置rpc的restTemplate
  *
@@ -29,19 +30,8 @@ public class TemplateConfig {
      */
     private Integer connectionRequestTimeout = 5000;
 
-
     /**
-     * 套接字超时时间
-     */
-    private Integer socketTimeout = 5000;
-
-    /**
-     * 每个目标主机最大连接数
-     */
-    private Integer maxPerRouteSize = 20;
-
-    /**
-     * rpc的缓存缓存目录
+     * dir缓存用户与文件存储
      */
     private String cacheDir;
 

@@ -174,7 +174,7 @@ public class MrClientPostProcessor implements BeanPostProcessor {
             return rpcConnector.download(url, request);
         } else {
             request.setParams(objs);
-            String result = rpcConnector.exchangeRpcType(url, HttpMethod.POST, String.class, request);
+            String result = rpcConnector.exchangeRpcType(url, String.class, request);
             return Reflector.execRealMethodWithReturnString(method, result);
         }
     }

@@ -1,6 +1,9 @@
 package com.murong.rpc.util;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.http.HttpHeaders;
 
 import java.lang.reflect.Method;
@@ -10,30 +13,39 @@ import java.lang.reflect.Method;
  *
  * @author yaochuang 2024/04/24 16:12
  */
-@Data
+@Getter
 public class RpcAttribute {
+
+    public RpcAttribute(String endpoint, Integer version, String method) {
+        this.endpoint = endpoint;
+        this.version = version;
+        this.method = method;
+    }
+
     /**
      * 远程调用的端点
      */
-    private String endpoint;
+    private final String endpoint;
 
     /**
      * 调用的版本
      */
-    private Integer version;
+    private final Integer version;
 
     /**
      * 调用具体方法
      */
-    private String method;
+    private final String method;
 
     /**
      * 请求头对象
      */
+    @Setter
     private HttpHeaders headers;
 
     /**
      * 请求的参数
      */
+    @Setter
     private Object[] realParams;
 }

@@ -2,12 +2,15 @@ package com.murong.rpc.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.murong.rpc.cache.RpcCache;
+import com.murong.rpc.config.SpringContext;
 import com.murong.rpc.util.RpcRequest;
 import com.murong.rpc.constant.RpcUrl;
 import com.murong.rpc.interact.MrServerAroundAdvice;
 import com.murong.rpc.interact.ProceedJoinPoint;
 import com.murong.rpc.util.DefaultKeyValue;
 import com.murong.rpc.util.StreamUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.SneakyThrows;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -37,13 +37,13 @@ import static com.murong.rpc.util.Reflector.transMethodWithParams;
 public class MrRpcCommonController {
 
     @Autowired
-    MrServerAroundAdvice mrServerAroundAdvice;
+    SpringContext springContext;
+
 
     @SneakyThrows
     @PostMapping(value = RpcUrl.RPC)
-    public String common(@RequestBody String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
+    public String common(@RequestBody RpcRequest rpcRequest, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         try {
-            RpcRequest rpcRequest = JSON.parseObject(param, RpcRequest.class);
             DefaultKeyValue<Object, Method> objectMethodDefaultKeyValue = RpcCache.getVersionMethod(rpcRequest);
             Object instance = objectMethodDefaultKeyValue.getKey();
             Method method = objectMethodDefaultKeyValue.getValue();
@@ -67,7 +67,7 @@ public class MrRpcCommonController {
 
     @SneakyThrows
     @PostMapping(value = RpcUrl.UPLOAD)
-    public String upload(@RequestParam String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
+    public String upload(@RequestParam(name = "param") String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         try {
             RpcRequest rpcRequest = JSON.parseObject(URLDecoder.decode(param, Charset.defaultCharset()), RpcRequest.class);
             DefaultKeyValue<Object, Method> objectMethodDefaultKeyValue = RpcCache.getVersionMethod(rpcRequest);
@@ -88,9 +88,8 @@ public class MrRpcCommonController {
 
     @SneakyThrows
     @PostMapping(value = RpcUrl.DOWNLOAD)
-    public void download(@RequestParam String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
+    public void download(@RequestBody RpcRequest rpcRequest, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         try {
-            RpcRequest rpcRequest = JSON.parseObject(URLDecoder.decode(param, Charset.defaultCharset()), RpcRequest.class);
             DefaultKeyValue<Object, Method> objectMethodDefaultKeyValue = RpcCache.getVersionMethod(rpcRequest);
             Object instance = objectMethodDefaultKeyValue.getKey();
             Method method = objectMethodDefaultKeyValue.getValue();
@@ -121,11 +120,6 @@ public class MrRpcCommonController {
             }
 
             @Override
-            public Cookie[] getCookies() {
-                return httpServletRequest.getCookies();
-            }
-
-            @Override
             public Object getInstance() {
                 return instance;
             }
@@ -145,6 +139,6 @@ public class MrRpcCommonController {
                 return method.invoke(instance, objects);
             }
         };
-        return mrServerAroundAdvice.proceed(proceedJoinPoint);
+        return springContext.getBean(MrServerAroundAdvice.class).proceed(proceedJoinPoint);
     }
 }

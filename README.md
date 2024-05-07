@@ -1,7 +1,7 @@
 ## 1.使用要求
 
 ```
-java版本:17+,spring-boot-starter版本,建议使用2.7+,比如2.7.11
+java版本:17+ , spring-boot-starter版本,建议使用3+,比如3.2.4
 ```
 
 ## 2.rpc的坐标依赖
@@ -11,7 +11,7 @@ java版本:17+,spring-boot-starter版本,建议使用2.7+,比如2.7.11
 <dependency>
     <groupId>io.github.wohatel</groupId>
     <artifactId>mr-rpc</artifactId>
-    <version>1.0.0</version>
+    <version>3.0.0</version>
 </dependency>
 后续会上传到mvn中央仓库或私服
 ```
@@ -281,23 +281,18 @@ public class FileApiService implements FileApi {
 ```
 
 ```
-连接池配置优化
-
+配置文件中可以添加具体的链接池优化
+    
+    链接服务端超时时间
+    mr.rpc.rest.connect-timeout=5000;
+    连接池大小
+    mr.rpc.rest.max-pool-size=100;
+    从连接池获取数据时间
+    mr.rpc.rest.connection-request-timeout=5000;
+    可以用于缓存一些流的dir(一般不用配置使用默认的),序列化流时候缓存为本地文件
+    mr.rpc.rest.cache-dir=/tmp/dir;
 
 ```
-
-    链接超时时间-发送请求后超时
-    mr.rpc.rest.connectTimeout = 5000;
-    连接池最大数量
-    mr.rpc.rest.max-pool-size=100
-    从连接池中获取链接最大等待时间
-    mr.rpc.rest.connection-request-timeout=5000;
-    读取或写入操作时的超时时间
-    mr.rpc.rest.socket-timeout=5000;
-    每个目标主机最大连接数
-    mr.rpc.rest.max-per-route-size=20;
-    用于配置序列化流等大文件时的目录(一般不用填写,使用默认)
-    mr.rpc.rest.cache-dir=/tmp/dir;
 
 -----------------
 结束
