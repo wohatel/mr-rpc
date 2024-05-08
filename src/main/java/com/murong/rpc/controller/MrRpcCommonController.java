@@ -42,8 +42,9 @@ public class MrRpcCommonController {
 
     @SneakyThrows
     @PostMapping(value = RpcUrl.RPC)
-    public String common(@RequestBody RpcRequest rpcRequest, HttpServletRequest httpServletRequest, HttpServletResponse response) {
+    public String common(@RequestBody String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         try {
+            RpcRequest rpcRequest = JSON.parseObject(param, RpcRequest.class);
             DefaultKeyValue<Object, Method> objectMethodDefaultKeyValue = RpcCache.getVersionMethod(rpcRequest);
             Object instance = objectMethodDefaultKeyValue.getKey();
             Method method = objectMethodDefaultKeyValue.getValue();
@@ -88,8 +89,9 @@ public class MrRpcCommonController {
 
     @SneakyThrows
     @PostMapping(value = RpcUrl.DOWNLOAD)
-    public void download(@RequestBody RpcRequest rpcRequest, HttpServletRequest httpServletRequest, HttpServletResponse response) {
+    public void download(@RequestBody String param, HttpServletRequest httpServletRequest, HttpServletResponse response) {
         try {
+            RpcRequest rpcRequest = JSON.parseObject(param, RpcRequest.class);
             DefaultKeyValue<Object, Method> objectMethodDefaultKeyValue = RpcCache.getVersionMethod(rpcRequest);
             Object instance = objectMethodDefaultKeyValue.getKey();
             Method method = objectMethodDefaultKeyValue.getValue();
